@@ -1,0 +1,19 @@
+/* TailwindCSS — layout utilities only */
+@import "tailwindcss";
+
+/* PrimeNG Aura theme — all color/design tokens come from here */
+/* Note: PrimeNG theme is configured via providePrimeNG() in app.config.ts */
+@import "primeicons/primeicons.css";
+
+/* Global layout resets only */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
