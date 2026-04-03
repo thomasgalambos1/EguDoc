@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, DatePipe, SlicePipe } from '@angular/common';
+import { DatePipe, SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -8,17 +8,14 @@ import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { AuthService } from '../core/services/auth.service';
 import { RegistraturaService } from '../core/services/registratura.service';
-import { Document } from '../core/models/document.model';
-
-interface StatCard {
-  label: string;
-  value: number;
-}
+import { Document, DocumentStatus } from '../core/models/document.model';
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule, RouterLink, CardModule, ButtonModule, TagModule, TableModule, SkeletonModule, DatePipe, SlicePipe],
+  imports: [
+    DatePipe, SlicePipe, RouterLink,
+    CardModule, ButtonModule, TagModule, TableModule, SkeletonModule
+  ],
   template: `
     <div class="flex flex-col gap-6 p-6">
       <div class="flex items-center justify-between">
@@ -30,22 +27,55 @@ interface StatCard {
       </div>
 
       <div class="grid gap-6" style="grid-template-columns: repeat(4, 1fr);">
-        @for (stat of statCards(); track stat.label) {
-          <p-card>
-            <div class="flex flex-col gap-2">
-              <span style="color: var(--p-text-muted-color)">{{ stat.label }}</span>
-              @if (loading()) {
-                <p-skeleton height="2rem" />
-              } @else {
-                <span class="text-3xl font-bold">{{ stat.value }}</span>
-              }
-            </div>
-          </p-card>
-        }
+        <p-card>
+          <div class="flex flex-col gap-2">
+            <span style="color: var(--p-text-muted-color)">Total Documente</span>
+            @if (loading()) {
+              <p-skeleton height="2rem" />
+            } @else {
+              <span class="text-3xl font-bold">{{ stats().total }}</span>
+            }
+          </div>
+        </p-card>
+        <p-card>
+          <div class="flex flex-col gap-2">
+            <span style="color: var(--p-text-muted-color)">În Lucru</span>
+            @if (loading()) {
+              <p-skeleton height="2rem" />
+            } @else {
+              <span class="text-3xl font-bold">{{ stats().inLucru }}</span>
+            }
+          </div>
+        </p-card>
+        <p-card>
+          <div class="flex flex-col gap-2">
+            <span style="color: var(--p-text-muted-color)">Așteaptă Aprobare</span>
+            @if (loading()) {
+              <p-skeleton height="2rem" />
+            } @else {
+              <span class="text-3xl font-bold">{{ stats().fluxAprobare }}</span>
+            }
+          </div>
+        </p-card>
+        <p-card>
+          <div class="flex flex-col gap-2">
+            <span style="color: var(--p-text-muted-color)">Finalizate Azi</span>
+            @if (loading()) {
+              <p-skeleton height="2rem" />
+            } @else {
+              <span class="text-3xl font-bold">{{ stats().finalizateAzi }}</span>
+            }
+          </div>
+        </p-card>
       </div>
 
       <p-card header="Documente Recente">
-        <p-table [value]="recentDocuments()" [loading]="loading()" styleClass="p-datatable-sm">
+        <p-table
+          [value]="recentDocuments()"
+          [loading]="loading()"
+          [paginator]="false"
+          styleClass="p-datatable-sm"
+        >
           <ng-template #header>
             <tr>
               <th>Nr. Înregistrare</th>
@@ -60,18 +90,31 @@ interface StatCard {
             <tr>
               <td><code>{{ doc.nr_inregistrare }}</code></td>
               <td>{{ doc.tip }}</td>
-              <td>{{ doc.obiect | slice:0:60 }}{{ doc.obiect.length > 60 ? '...' : '' }}</td>
-              <td><p-tag [value]="statusLabel(doc.status)" [severity]="statusSeverity(doc.status)" /></td>
+              <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ doc.obiect }}
+              </td>
+              <td>
+                <p-tag
+                  [value]="statusLabel(doc.status)"
+                  [severity]="statusSeverity(doc.status)"
+                />
+              </td>
               <td>{{ doc.data_inregistrare | date:'dd.MM.yyyy' }}</td>
               <td>
-                <p-button icon="pi pi-eye" severity="secondary" [text]="true" [rounded]="true" [routerLink]="['/registratura', doc.id]" />
+                <p-button
+                  icon="pi pi-eye"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  [routerLink]="['/registratura', doc.id]"
+                />
               </td>
             </tr>
           </ng-template>
           <ng-template #emptymessage>
             <tr>
               <td colspan="6">
-                <div class="flex flex-col items-center gap-3 p-8">
+                <div class="flex flex-col items-center gap-3 p-6">
                   <i class="pi pi-inbox text-4xl" style="color: var(--p-text-muted-color)"></i>
                   <span style="color: var(--p-text-muted-color)">Nu există documente recente</span>
                   <p-button label="Înregistrează primul document" routerLink="/registratura/nou" />
@@ -87,16 +130,11 @@ interface StatCard {
 })
 export class DashboardComponent implements OnInit {
   auth = inject(AuthService);
-  private svc = inject(RegistraturaService);
+  private registraturaService = inject(RegistraturaService);
 
   loading = signal(true);
   recentDocuments = signal<Document[]>([]);
-  statCards = signal<StatCard[]>([
-    { label: 'Total Documente', value: 0 },
-    { label: 'În Lucru', value: 0 },
-    { label: 'Așteaptă Aprobare', value: 0 },
-    { label: 'Finalizate Azi', value: 0 },
-  ]);
+  stats = signal({ total: 0, inLucru: 0, fluxAprobare: 0, finalizateAzi: 0 });
 
   ngOnInit(): void {
     this.loadDashboard();
@@ -104,34 +142,43 @@ export class DashboardComponent implements OnInit {
 
   private async loadDashboard(): Promise<void> {
     try {
-      const result = await this.svc.getDocuments({ limit: 10, page: 1 });
+      const result = await this.registraturaService.getDocuments({ limit: 10, page: 1 });
       this.recentDocuments.set(result.data ?? []);
-      this.statCards.set([
-        { label: 'Total Documente', value: result.total },
-        { label: 'În Lucru', value: 0 },
-        { label: 'Așteaptă Aprobare', value: 0 },
-        { label: 'Finalizate Azi', value: 0 },
-      ]);
+      this.stats.set({
+        total: result.total,
+        inLucru: result.data.filter(d => d.status === 'IN_LUCRU').length,
+        fluxAprobare: result.data.filter(d => d.status === 'FLUX_APROBARE').length,
+        finalizateAzi: result.data.filter(d => d.status === 'FINALIZAT').length,
+      });
     } catch {
-      // API not yet reachable — show empty state
+      // Service unavailable during development — leave stats at zero
     } finally {
       this.loading.set(false);
     }
   }
 
-  statusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      INREGISTRAT: 'Înregistrat', ALOCAT_COMPARTIMENT: 'Alocat',
-      IN_LUCRU: 'În Lucru', FLUX_APROBARE: 'Aprobare',
-      FINALIZAT: 'Finalizat', ARHIVAT: 'Arhivat', ANULAT: 'Anulat',
+  statusLabel(status: DocumentStatus): string {
+    const labels: Record<DocumentStatus, string> = {
+      INREGISTRAT: 'Înregistrat',
+      ALOCAT_COMPARTIMENT: 'Alocat',
+      IN_LUCRU: 'În Lucru',
+      FLUX_APROBARE: 'Aprobare',
+      FINALIZAT: 'Finalizat',
+      ARHIVAT: 'Arhivat',
+      ANULAT: 'Anulat',
     };
     return labels[status] ?? status;
   }
 
-  statusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
-      INREGISTRAT: 'info', ALOCAT_COMPARTIMENT: 'warn', IN_LUCRU: 'warn',
-      FLUX_APROBARE: 'warn', FINALIZAT: 'success', ARHIVAT: 'secondary', ANULAT: 'danger',
+  statusSeverity(status: DocumentStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    const map: Record<DocumentStatus, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
+      INREGISTRAT: 'info',
+      ALOCAT_COMPARTIMENT: 'warn',
+      IN_LUCRU: 'warn',
+      FLUX_APROBARE: 'warn',
+      FINALIZAT: 'success',
+      ARHIVAT: 'secondary',
+      ANULAT: 'danger',
     };
     return map[status] ?? 'secondary';
   }
