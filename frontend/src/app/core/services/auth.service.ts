@@ -29,7 +29,7 @@ export class AuthService {
       redirectUri: environment.oidc.redirectUri,
       scope: environment.oidc.scope,
       responseType: environment.oidc.responseType,
-      usePkce: environment.oidc.usePkce,
+      disablePKCE: !environment.oidc.usePkce,
       requireHttps: environment.oidc.requireHttps,
       showDebugInformation: environment.oidc.showDebugInformation,
       clearHashAfterLogin: true,

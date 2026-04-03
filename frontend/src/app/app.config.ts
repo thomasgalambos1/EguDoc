@@ -3,7 +3,7 @@ import { provideRouter, withComponentInputBinding, withViewTransitions } from '@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
-import { Aura } from '@primeng/themes/aura';
+import Aura from '@primeng/themes/aura';
 import { OAuthModule } from 'angular-oauth2-oidc';
 
 import { routes } from './app.routes';
