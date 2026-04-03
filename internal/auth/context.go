@@ -40,7 +40,7 @@ func RequireAuth(cache *JWKSCache) func(http.Handler) http.Handler {
 func writeJSON(w http.ResponseWriter, status int, body string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write([]byte(body))
+	_, _ = w.Write([]byte(body))
 }
 
 func ContextWithClaims(ctx context.Context, claims *Claims) context.Context {
