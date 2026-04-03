@@ -33,6 +33,17 @@ CREATE TRIGGER workflow_events_immutable
 BEFORE UPDATE OR DELETE ON workflow_events
 FOR EACH ROW EXECUTE FUNCTION prevent_workflow_event_modification();
 
+CREATE OR REPLACE FUNCTION prevent_workflow_event_truncate()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'workflow_events table cannot be truncated';
+END;
+$$;
+
+CREATE TRIGGER workflow_events_no_truncate
+BEFORE TRUNCATE ON workflow_events
+FOR EACH STATEMENT EXECUTE FUNCTION prevent_workflow_event_truncate();
+
 CREATE INDEX idx_workflow_events_document ON workflow_events(document_id, created_at DESC);
 CREATE INDEX idx_workflow_events_actor ON workflow_events(actor_subject, created_at DESC);
 CREATE INDEX idx_workflow_events_institution ON workflow_events(institution_id, created_at DESC);

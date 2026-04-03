@@ -79,5 +79,6 @@ var ValidTransitions = map[string]map[Action]string{
 		ActionCancel:  "ANULAT",
 	},
 	"FINALIZAT": {},
+	"ARHIVAT":   {}, // terminal state — documents reach this via background archive worker
 	"ANULAT":    {},
 }

@@ -25,7 +25,7 @@ func NewEngine(db *pgxpool.Pool) *Engine {
 // Advance processes a workflow action on a document.
 // It validates the transition, updates the document, and logs the event atomically.
 func (e *Engine) Advance(ctx context.Context, documentID uuid.UUID, req ActionRequest, claims *auth.Claims, ip string) (*WorkflowEvent, error) {
-	tx, err := e.db.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	tx, err := e.db.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead})
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
@@ -82,31 +82,45 @@ func (e *Engine) Advance(ctx context.Context, documentID uuid.UUID, req ActionRe
 		}
 	}
 
-	// Compute nullable fields for the UPDATE
-	var newCompartimentID *uuid.UUID
-	var newUserSubject *string
-	var newApproverSubject *string
-	var newDataFinalizare *time.Time
-	var newMotivAnulare *string
-	isReject := false
+	// Compute final field values explicitly per action.
+	// nil means NULL in the DB (clear the field).
+	var (
+		finalCompartimentID     *uuid.UUID
+		finalUserSubject        *string
+		finalApproverSubject    *string
+		finalDataFinalizare     *time.Time
+		finalMotivAnulare       *string
+		incrementRejectionCount bool
+	)
 
 	switch req.Action {
 	case ActionAssignCompartiment:
-		newCompartimentID = req.CompartimentID
+		finalCompartimentID = req.CompartimentID
+		// user and approver both cleared (nil = NULL)
+
 	case ActionAssignUser:
 		s := req.AssigneeSubject
-		newUserSubject = &s
+		finalUserSubject = &s
+		// approver stays nil (not set in ALOCAT_COMPARTIMENT state)
+
 	case ActionSendForApproval:
 		s := req.AssigneeSubject
-		newApproverSubject = &s
+		finalApproverSubject = &s
+		// current user cleared
+
 	case ActionApprove, ActionFinalize:
 		now := time.Now()
-		newDataFinalizare = &now
+		finalDataFinalizare = &now
+		// user and approver both cleared
+
 	case ActionReject:
-		isReject = true
+		incrementRejectionCount = true
+		// user and approver both cleared — registrar will reassign
+
 	case ActionCancel:
 		s := req.Motiv
-		newMotivAnulare = &s
+		finalMotivAnulare = &s
+		// user and approver both cleared
 	}
 
 	_, err = tx.Exec(ctx, `
@@ -123,12 +137,12 @@ func (e *Engine) Advance(ctx context.Context, documentID uuid.UUID, req ActionRe
 		WHERE id = $8
 	`,
 		newStatus,
-		newCompartimentID,
-		newUserSubject,
-		newApproverSubject,
-		isReject,
-		newDataFinalizare,
-		newMotivAnulare,
+		finalCompartimentID,
+		finalUserSubject,
+		finalApproverSubject,
+		incrementRejectionCount,
+		finalDataFinalizare,
+		finalMotivAnulare,
 		documentID,
 	)
 	if err != nil {

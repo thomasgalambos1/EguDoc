@@ -119,7 +119,7 @@ func (s *Service) List(ctx context.Context, params ListEntitatiParams) ([]*Entit
 	args = append(args, params.Limit, offset)
 	query := fmt.Sprintf(`
 		SELECT id, tip, denumire, adresa, localitate, judet, telefon, email,
-		       cnp, prenume, cui, nr_reg_com, delivery_participant_id,
+		       cnp, prenume, cui, nr_reg_com, cod_siruta, tip_institutie, delivery_participant_id,
 		       institution_id, created_by, active, created_at, updated_at
 		FROM entitati %s
 		ORDER BY denumire ASC
@@ -137,7 +137,7 @@ func (s *Service) List(ctx context.Context, params ListEntitatiParams) ([]*Entit
 		var e Entitate
 		if err := rows.Scan(
 			&e.ID, &e.Tip, &e.Denumire, &e.Adresa, &e.Localitate, &e.Judet, &e.Telefon, &e.Email,
-			&e.CNP, &e.Prenume, &e.CUI, &e.NrRegCom, &e.DeliveryParticipantID,
+			&e.CNP, &e.Prenume, &e.CUI, &e.NrRegCom, &e.CodSiruta, &e.TipInstitutie, &e.DeliveryParticipantID,
 			&e.InstitutionID, &e.CreatedBy, &e.Active, &e.CreatedAt, &e.UpdatedAt,
 		); err != nil {
 			return nil, 0, fmt.Errorf("scan entitate: %w", err)
