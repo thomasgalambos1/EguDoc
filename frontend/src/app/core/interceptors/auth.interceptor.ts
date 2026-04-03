@@ -5,6 +5,8 @@ import { environment } from '../../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
+  // In dev: apiUrl is absolute (http://localhost:8090), matches absolute URLs
+  // In prod: apiUrl is '/api', matches relative paths — always use relative URLs in services
   if (!req.url.startsWith(environment.apiUrl)) {
     return next(req);
   }

@@ -7,6 +7,7 @@ export const environment = {
     redirectUri: 'https://egudoc.eguilde.ro/auth/callback',
     scope: 'openid profile email offline_access',
     responseType: 'code',
+    usePkce: true,
     requireHttps: true,
     showDebugInformation: false,
   }

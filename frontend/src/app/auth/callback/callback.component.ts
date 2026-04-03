@@ -6,7 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
   selector: 'app-callback',
   imports: [ProgressSpinnerModule],
   template: `
-    <div class="flex items-center justify-center" style="min-height: 100vh;">
+    <div class="flex items-center justify-center min-h-screen">
       <div class="flex flex-col items-center gap-4">
         <p-progressSpinner strokeWidth="4" />
         <span>Se procesează autentificarea...</span>
