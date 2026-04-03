@@ -13,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
   template: `
     <p-menubar [model]="menuItems" styleClass="border-noround px-4">
       <ng-template #start>
-        <span class="font-bold text-xl mr-6" routerLink="/dashboard" style="cursor: pointer;">
+        <span class="font-bold text-xl mr-6 cursor-pointer" routerLink="/dashboard">
           EguDoc
         </span>
       </ng-template>
