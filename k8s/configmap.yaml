@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: egudoc-config
+  namespace: egudoc
+data:
+  PORT: "8090"
+  MINIO_BUCKET_DOCUMENTS: "egudoc-documents"
+  MINIO_USE_SSL: "true"
+  LOG_LEVEL: "info"
+  NODE_ENV: "production"
+  GOTENBERG_URL: "http://gotenberg.gotenberg.svc.cluster.local:3000"
