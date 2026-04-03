@@ -12,6 +12,7 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { MessageService } from 'primeng/api';
 import { Document, DocumentStatus } from '../../core/models/document.model';
 import { RegistraturaService, ListDocumentsParams } from '../../core/services/registratura.service';
 
@@ -156,10 +157,12 @@ import { RegistraturaService, ListDocumentsParams } from '../../core/services/re
       </p-table>
     </div>
   `,
+  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocumentListComponent implements OnInit {
   private svc = inject(RegistraturaService);
+  private messageService = inject(MessageService);
 
   documents = signal<Document[]>([]);
   loading = signal(true);
@@ -192,6 +195,7 @@ export class DocumentListComponent implements OnInit {
     { label: 'Hotărâre', value: 'HOTARARE' },
     { label: 'Dispoziție', value: 'DISPOZITIE' },
     { label: 'Adresă', value: 'ADRESA' },
+    { label: 'Notificare', value: 'NOTIFICARE' },
   ];
 
   ngOnInit(): void {
@@ -210,7 +214,7 @@ export class DocumentListComponent implements OnInit {
       this.documents.set(result.data);
       this.totalRecords.set(result.total);
     } catch {
-      // API not available yet during development
+      this.messageService.add({ severity: 'error', summary: 'Eroare', detail: 'Nu s-au putut încărca documentele' });
     } finally {
       this.loading.set(false);
     }

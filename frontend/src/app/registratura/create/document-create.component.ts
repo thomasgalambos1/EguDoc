@@ -1,6 +1,6 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -146,6 +146,7 @@ export class DocumentCreateComponent {
   private svc = inject(RegistraturaService);
   private router = inject(Router);
   private messageService = inject(MessageService);
+  private route = inject(ActivatedRoute);
 
   saving = signal(false);
 
@@ -175,6 +176,7 @@ export class DocumentCreateComponent {
     { label: 'Certificat', value: 'CERTIFICAT' },
     { label: 'Autorizație', value: 'AUTORIZATIE' },
     { label: 'Aviz', value: 'AVIZ' },
+    { label: 'Notificare', value: 'NOTIFICARE' },
   ];
 
   clasificareOptions = [
@@ -198,7 +200,7 @@ export class DocumentCreateComponent {
     try {
       const val = this.form.value;
       const doc = await this.svc.createDocument({
-        registru_id: '',
+        registru_id: this.route.snapshot.queryParamMap.get('registru_id') ?? '',
         tip: val.tip as TipDocument,
         clasificare: val.clasificare as Clasificare,
         obiect: val.obiect!,
