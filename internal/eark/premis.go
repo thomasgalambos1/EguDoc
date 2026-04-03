@@ -153,5 +153,9 @@ func BuildPREMIS(docID, filename, sha256 string, sizeBytes int64, ingestedAt tim
 		},
 	}
 
-	return xml.MarshalIndent(premis, "", "  ")
+	out, err := xml.MarshalIndent(premis, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append([]byte(xml.Header), out...), nil
 }

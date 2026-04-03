@@ -64,5 +64,9 @@ func NewDublinCoreMetadata(meta DocumentMetadata) DublinCoreMetadata {
 
 func MarshalDublinCore(meta DocumentMetadata) ([]byte, error) {
 	dc := NewDublinCoreMetadata(meta)
-	return xml.MarshalIndent(dc, "", "  ")
+	out, err := xml.MarshalIndent(dc, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append([]byte(xml.Header), out...), nil
 }

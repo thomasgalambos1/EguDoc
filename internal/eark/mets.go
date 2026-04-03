@@ -159,5 +159,9 @@ func BuildRootMETS(packageID, label, institutionName, institutionCUI string, dcX
 		Div: METSDiv{LABEL: "Root", Divs: []METSDiv{{LABEL: "Metadata"}, {LABEL: "Representations", Divs: []METSDiv{{LABEL: "rep-001"}}}}},
 	}
 
-	return xml.MarshalIndent(mets, "", "  ")
+	out, err := xml.MarshalIndent(mets, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append([]byte(xml.Header), out...), nil
 }

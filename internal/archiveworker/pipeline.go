@@ -119,7 +119,10 @@ func (p *Pipeline) fetchDocumentAndMeta(ctx context.Context, documentID uuid.UUI
 		       COALESCE(a.storage_key, '') as storage_key,
 		       COALESCE(a.filename, '') as filename,
 		       i.cui, i.denumire,
-		       COALESCE(e.denumire, '') as emitent_denumire
+		       COALESCE(e.denumire, '') as emitent_denumire,
+		       d.tip::text, d.clasificare::text,
+		       COALESCE(d.cuvinte_cheie, '{}') as cuvinte_cheie,
+		       COALESCE(d.continut, '') as continut
 		FROM documente d
 		JOIN institutions i ON i.id = d.institution_id
 		LEFT JOIN LATERAL (
@@ -130,11 +133,14 @@ func (p *Pipeline) fetchDocumentAndMeta(ctx context.Context, documentID uuid.UUI
 		) a ON TRUE
 		LEFT JOIN entitati e ON e.id = d.emitent_id
 		WHERE d.id = $1
+		LIMIT 1
 	`, documentID).Scan(
 		&doc.NrInregistrare, &doc.Obiect, &doc.TermenPastrareAni,
 		&doc.StorageKey, &doc.Filename,
 		&doc.InstitutionCUI, &meta.InstitutionDenumire,
 		&meta.EmitentDenumire,
+		&meta.TipDocument, &meta.Clasificare,
+		&meta.CuvinteChecheie, &meta.Continut,
 	)
 	if err != nil {
 		return nil, meta, fmt.Errorf("fetch document: %w", err)
