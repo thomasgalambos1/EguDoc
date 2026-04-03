@@ -1,4 +1,7 @@
-/* TailwindCSS — layout utilities only */
+/* TailwindCSS — layout utilities ONLY (flex, gap, grid, p-*, m-*, w-*, h-*)
+   NEVER use Tailwind color utilities (text-red-500, bg-blue-200, etc.)
+   ALL colors must come from the PrimeNG theme via CSS custom properties
+   e.g., style="color: var(--p-text-muted-color)" — enforced by code review */
 @import "tailwindcss";
 
 /* PrimeNG Aura theme — all color/design tokens come from here */
