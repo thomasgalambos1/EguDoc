@@ -16,7 +16,7 @@ CREATE TABLE permissions (
     subject     VARCHAR(100) NOT NULL,
     condition   JSONB,
     description TEXT,
-    UNIQUE(action, subject, COALESCE(condition::text, ''))
+    CONSTRAINT uq_permissions_action_subject UNIQUE(action, subject, COALESCE(condition::text, ''))
 );
 
 CREATE TABLE role_permissions (
@@ -35,7 +35,7 @@ CREATE TABLE user_roles (
     active          BOOLEAN NOT NULL DEFAULT TRUE,
     expires_at      TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(user_subject, role_id, COALESCE(institution_id::text,''), COALESCE(compartiment_id::text,''))
+    CONSTRAINT uq_user_roles_scoped UNIQUE(user_subject, role_id, COALESCE(institution_id::text,''), COALESCE(compartiment_id::text,''))
 );
 
 CREATE INDEX idx_user_roles_subject ON user_roles(user_subject) WHERE active = TRUE;

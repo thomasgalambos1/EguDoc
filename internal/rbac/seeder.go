@@ -65,7 +65,7 @@ func SeedDefaultRolesAndPermissions(ctx context.Context, db *pgxpool.Pool) error
 		_, err := db.Exec(ctx, `
 			INSERT INTO permissions (action, subject, description)
 			VALUES ($1, $2, $3)
-			ON CONFLICT (action, subject, COALESCE(condition::text, '')) DO NOTHING
+			ON CONFLICT ON CONSTRAINT uq_permissions_action_subject DO NOTHING
 		`, p.action, p.subject, p.desc)
 		if err != nil {
 			return fmt.Errorf("seed permission %s:%s: %w", p.action, p.subject, err)
@@ -137,5 +137,8 @@ func SeedDefaultRolesAndPermissions(ctx context.Context, db *pgxpool.Pool) error
 		    OR (p.action = 'read' AND p.subject = 'report'))
 		ON CONFLICT DO NOTHING
 	`)
-	return err
+	if err != nil {
+		return fmt.Errorf("seed archiver permissions: %w", err)
+	}
+	return nil
 }

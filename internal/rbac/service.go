@@ -7,14 +7,16 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 type Service struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	log *zap.Logger
 }
 
-func NewService(db *pgxpool.Pool) *Service {
-	return &Service{db: db}
+func NewService(db *pgxpool.Pool, log *zap.Logger) *Service {
+	return &Service{db: db, log: log}
 }
 
 // HasPermission checks if a user (identified by subject) has the given action on the given subject.
@@ -69,7 +71,7 @@ func (s *Service) GetUserRoles(ctx context.Context, userSubject string, institut
 	for rows.Next() {
 		var code string
 		if err := rows.Scan(&code); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("scan role code: %w", err)
 		}
 		codes = append(codes, code)
 	}
@@ -81,9 +83,7 @@ func (s *Service) AssignRole(ctx context.Context, grantedBy string, assignment U
 	_, err := s.db.Exec(ctx, `
 		INSERT INTO user_roles (user_subject, role_id, institution_id, compartiment_id, granted_by, active, expires_at)
 		VALUES ($1, $2, $3, $4, $5, TRUE, $6)
-		ON CONFLICT (user_subject, role_id,
-		             COALESCE(institution_id::text,''),
-		             COALESCE(compartiment_id::text,''))
+		ON CONFLICT ON CONSTRAINT uq_user_roles_scoped
 		DO UPDATE SET active = TRUE, expires_at = EXCLUDED.expires_at, granted_by = EXCLUDED.granted_by
 	`,
 		assignment.UserSubject,

@@ -6,6 +6,7 @@ import (
 
 	"github.com/eguilde/egudoc/internal/auth"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 // Require returns a Chi middleware that checks the authenticated user has `action` on `subject`.
@@ -22,9 +23,12 @@ func (s *Service) Require(action, subject string) func(http.Handler) http.Handle
 			// Extract institution from header if present
 			var institutionID *uuid.UUID
 			if raw := r.Header.Get("X-Institution-ID"); raw != "" {
-				if id, err := uuid.Parse(raw); err == nil {
-					institutionID = &id
+				id, err := uuid.Parse(raw)
+				if err != nil {
+					http.Error(w, `{"error":"invalid X-Institution-ID"}`, http.StatusBadRequest)
+					return
 				}
+				institutionID = &id
 			}
 
 			check := CheckContext{
@@ -33,7 +37,12 @@ func (s *Service) Require(action, subject string) func(http.Handler) http.Handle
 			}
 
 			allowed, err := s.HasPermission(r.Context(), check, action, subject)
-			if err != nil || !allowed {
+			if err != nil {
+				s.log.Error("rbac permission check failed", zap.Error(err))
+				http.Error(w, `{"error":"service unavailable"}`, http.StatusServiceUnavailable)
+				return
+			}
+			if !allowed {
 				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 				return
 			}
