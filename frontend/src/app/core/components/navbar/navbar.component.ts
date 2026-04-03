@@ -1,6 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MenubarModule } from 'primeng/menubar';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
@@ -10,10 +9,9 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
-  standalone: true,
-  imports: [CommonModule, MenubarModule, ButtonModule, AvatarModule, TooltipModule, RouterLink],
+  imports: [MenubarModule, ButtonModule, AvatarModule, TooltipModule, RouterLink],
   template: `
-    <p-menubar [model]="menuItems">
+    <p-menubar [model]="menuItems" styleClass="border-noround px-4">
       <ng-template #start>
         <span class="font-bold text-xl mr-6" routerLink="/dashboard" style="cursor: pointer;">
           EguDoc
@@ -39,7 +37,6 @@ import { AuthService } from '../../services/auth.service';
 })
 export class NavbarComponent {
   auth = inject(AuthService);
-  router = inject(Router);
 
   get menuItems(): MenuItem[] {
     return [
