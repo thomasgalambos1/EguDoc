@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { DatePipe, SlicePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -13,7 +13,7 @@ import { Document, DocumentStatus } from '../core/models/document.model';
 @Component({
   selector: 'app-dashboard',
   imports: [
-    DatePipe, SlicePipe, RouterLink,
+    DatePipe, RouterLink,
     CardModule, ButtonModule, TagModule, TableModule, SkeletonModule
   ],
   template: `
