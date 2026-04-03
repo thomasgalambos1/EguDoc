@@ -1,12 +1,10 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-callback',
-  standalone: true,
-  imports: [CommonModule, ProgressSpinnerModule],
+  imports: [ProgressSpinnerModule],
   template: `
     <div class="flex items-center justify-center" style="min-height: 100vh;">
       <div class="flex flex-col items-center gap-4">
