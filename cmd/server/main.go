@@ -16,7 +16,11 @@ import (
 )
 
 func main() {
-	log, _ := zap.NewProduction()
+	log, err := zap.NewProduction()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
 	defer log.Sync()
 
 	port := os.Getenv("PORT")
@@ -55,6 +59,9 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	srv.Shutdown(ctx)
-	log.Info("server stopped")
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Error("server shutdown error", zap.Error(err))
+	} else {
+		log.Info("server stopped")
+	}
 }
