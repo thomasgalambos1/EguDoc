@@ -50,7 +50,10 @@ func (d *Dispatcher) Dispatch(ctx context.Context, documentID uuid.UUID, subject
 
 	result, err := d.client.Submit(ctx, req, content, filename)
 	if err != nil {
-		d.db.Exec(ctx, `UPDATE documente SET delivery_status = 'FAILED', updated_at = NOW() WHERE id = $1`, documentID)
+		_, dbErr := d.db.Exec(ctx, `UPDATE documente SET delivery_status = 'FAILED', updated_at = NOW() WHERE id = $1`, documentID)
+		if dbErr != nil {
+			return fmt.Errorf("delivery submit: %w (also failed to record FAILED status: %v)", err, dbErr)
+		}
 		return fmt.Errorf("delivery submit: %w", err)
 	}
 
@@ -59,5 +62,8 @@ func (d *Dispatcher) Dispatch(ctx context.Context, documentID uuid.UUID, subject
 		SET delivery_message_id = $1, delivery_status = 'SUBMITTED', updated_at = NOW()
 		WHERE id = $2
 	`, result.ID, documentID)
-	return err
+	if err != nil {
+		return fmt.Errorf("update delivery status: %w", err)
+	}
+	return nil
 }

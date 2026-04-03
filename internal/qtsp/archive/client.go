@@ -25,9 +25,15 @@ func (c *Client) Ingest(ctx context.Context, title string, ownerID string, reten
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
 
-	mw.WriteField("title", title)
-	mw.WriteField("owner_id", ownerID)
-	mw.WriteField("retention_years", strconv.Itoa(retentionYears))
+	if err := mw.WriteField("title", title); err != nil {
+		return nil, fmt.Errorf("write title field: %w", err)
+	}
+	if err := mw.WriteField("owner_id", ownerID); err != nil {
+		return nil, fmt.Errorf("write owner_id field: %w", err)
+	}
+	if err := mw.WriteField("retention_years", strconv.Itoa(retentionYears)); err != nil {
+		return nil, fmt.Errorf("write retention_years field: %w", err)
+	}
 
 	part, err := mw.CreateFormFile("document", filename)
 	if err != nil {
